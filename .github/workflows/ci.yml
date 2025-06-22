@@ -24,11 +24,11 @@ jobs:
 
       - name: Test URL Service
         working-directory: ./mod-url
-        run: ./mvnw clean test
+        run: mvn clean test
 
       - name: Build JAR
         working-directory: ./mod-url
-        run: ./mvnw clean package -DskipTests
+        run: mvn clean package -DskipTests
 
   test-mod-analytics:
     name: Test Analytics Service
@@ -47,11 +47,11 @@ jobs:
 
       - name: Test Analytics Service
         working-directory: ./mod-analytics
-        run: ./mvnw clean test
+        run: mvn clean test
 
       - name: Build JAR
         working-directory: ./mod-analytics
-        run: ./mvnw clean package -DskipTests
+        run: mvn clean package -DskipTests
 
   build-docker:
     name: Build Docker Images
