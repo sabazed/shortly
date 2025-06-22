@@ -4,6 +4,7 @@ import com.sabazed.shortly.entity.ClickEvent;
 import com.sabazed.shortly.repository.ClickEventRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
