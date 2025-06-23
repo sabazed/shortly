@@ -1,0 +1,129 @@
+{
+  "id": null,
+  "title": "Application Services",
+  "tags": ["application", "services"],
+  "timezone": "browser",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Service Health Status",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "up{job=\"mod-url\"}",
+          "legendFormat": "MOD-URL"
+        },
+        {
+          "expr": "up{job=\"mod-analytics\"}",
+          "legendFormat": "MOD-Analytics"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {"options": {"0": {"text": "DOWN", "color": "red"}}, "type": "value"},
+            {"options": {"1": {"text": "UP", "color": "green"}}, "type": "value"}
+          ]
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+    },
+    {
+      "id": 2,
+      "title": "HTTP Request Rate",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "rate(http_server_requests_seconds_count{job=\"mod-url\"}[5m])",
+          "legendFormat": "MOD-URL Requests/sec"
+        },
+        {
+          "expr": "rate(http_server_requests_seconds_count{job=\"mod-analytics\"}[5m])",
+          "legendFormat": "MOD-Analytics Requests/sec"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+    },
+    {
+      "id": 3,
+      "title": "HTTP Status Codes (MOD-URL)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "rate(http_server_requests_seconds_count{job=\"mod-url\",status=~\"2..\"}[5m])",
+          "legendFormat": "MOD-URL 2xx"
+        },
+        {
+          "expr": "rate(http_server_requests_seconds_count{job=\"mod-url\",status=~\"4..\"}[5m])",
+          "legendFormat": "MOD-URL 4xx"
+        },
+        {
+          "expr": "rate(http_server_requests_seconds_count{job=\"mod-url\",status=~\"5..\"}[5m])",
+          "legendFormat": "MOD-URL 5xx"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+    },
+    {
+      "id": 4,
+      "title": "HTTP Status Codes (MOD-Analytics)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "rate(http_server_requests_seconds_count{job=\"mod-analytics\",status=~\"2..\"}[5m])",
+          "legendFormat": "MOD-Analytics 2xx"
+        },
+        {
+          "expr": "rate(http_server_requests_seconds_count{job=\"mod-analytics\",status=~\"4..\"}[5m])",
+          "legendFormat": "MOD-Analytics 4xx"
+        },
+        {
+          "expr": "rate(http_server_requests_seconds_count{job=\"mod-analytics\",status=~\"5..\"}[5m])",
+          "legendFormat": "MOD-Analytics 5xx"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+    },
+    {
+      "id": 5,
+      "title": "HTTP Response Times",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{job=\"mod-url\"}[5m]))",
+          "legendFormat": "MOD-URL 95th percentile"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{job=\"mod-analytics\"}[5m]))",
+          "legendFormat": "MOD-Analytics 95th percentile"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 6, "y": 26}
+    }
+  ],
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "refresh": "5s"
+}
