@@ -1,0 +1,277 @@
+{
+  "id": null,
+  "title": "Application Services",
+  "tags": ["application", "services"],
+  "style": "dark",
+  "timezone": "browser",
+  "editable": true,
+  "hideControls": false,
+  "graphTooltip": 1,
+  "panels": [
+    {
+      "id": 1,
+      "title": "Service Health Status",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "up{job=\"mod-url\"}",
+          "legendFormat": "MOD-URL",
+          "refId": "A"
+        },
+        {
+          "expr": "up{job=\"mod-analytics\"}",
+          "legendFormat": "MOD-Analytics",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                }
+              },
+              "type": "value"
+            },
+            {
+              "options": {
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              },
+              "type": "value"
+            }
+          ]
+        }
+      },
+      "gridPos": {"h": 8, "w": 8, "x": 0, "y": 0}
+    },
+    {
+      "id": 2,
+      "title": "Application Uptime",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "process_uptime_seconds{job=\"mod-url\"}",
+          "legendFormat": "MOD-URL",
+          "refId": "A"
+        },
+        {
+          "expr": "process_uptime_seconds{job=\"mod-analytics\"}",
+          "legendFormat": "MOD-Analytics",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        }
+      },
+      "gridPos": {"h": 8, "w": 8, "x": 8, "y": 0}
+    },
+    {
+      "id": 3,
+      "title": "Process CPU Usage",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "process_cpu_usage{job=\"mod-url\"}",
+          "legendFormat": "MOD-URL",
+          "refId": "A"
+        },
+        {
+          "expr": "process_cpu_usage{job=\"mod-analytics\"}",
+          "legendFormat": "MOD-Analytics",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1
+        }
+      },
+      "gridPos": {"h": 8, "w": 8, "x": 16, "y": 0}
+    },
+    {
+      "id": 4,
+      "title": "HTTP Request Rate",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "rate(http_server_requests_seconds_count{job=\"mod-url\"}[5m])",
+          "legendFormat": "MOD-URL {{method}} {{uri}}",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(http_server_requests_seconds_count{job=\"mod-analytics\"}[5m])",
+          "legendFormat": "MOD-Analytics {{method}} {{uri}}",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+    },
+    {
+      "id": 5,
+      "title": "HTTP Response Times (Average)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "rate(http_server_requests_seconds_sum{job=\"mod-url\"}[5m]) / rate(http_server_requests_seconds_count{job=\"mod-url\"}[5m])",
+          "legendFormat": "MOD-URL {{method}} {{uri}}",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(http_server_requests_seconds_sum{job=\"mod-analytics\"}[5m]) / rate(http_server_requests_seconds_count{job=\"mod-analytics\"}[5m])",
+          "legendFormat": "MOD-Analytics {{method}} {{uri}}",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+    },
+    {
+      "id": 6,
+      "title": "JVM Heap Memory Usage",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "jvm_memory_used_bytes{job=\"mod-url\", area=\"heap\"} / jvm_memory_max_bytes{job=\"mod-url\", area=\"heap\"} * 100",
+          "legendFormat": "MOD-URL Heap %",
+          "refId": "A"
+        },
+        {
+          "expr": "jvm_memory_used_bytes{job=\"mod-analytics\", area=\"heap\"} / jvm_memory_max_bytes{job=\"mod-analytics\", area=\"heap\"} * 100",
+          "legendFormat": "MOD-Analytics Heap %",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24}
+    },
+    {
+      "id": 7,
+      "title": "JVM Non-Heap Memory",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "jvm_memory_used_bytes{job=\"mod-url\", area=\"nonheap\"}",
+          "legendFormat": "MOD-URL {{id}}",
+          "refId": "A"
+        },
+        {
+          "expr": "jvm_memory_used_bytes{job=\"mod-analytics\", area=\"nonheap\"}",
+          "legendFormat": "MOD-Analytics {{id}}",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+    },
+    {
+      "id": 8,
+      "title": "JVM Threads",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "jvm_threads_live_threads{job=\"mod-url\"}",
+          "legendFormat": "MOD-URL Live Threads",
+          "refId": "A"
+        },
+        {
+          "expr": "jvm_threads_live_threads{job=\"mod-analytics\"}",
+          "legendFormat": "MOD-Analytics Live Threads",
+          "refId": "B"
+        },
+        {
+          "expr": "jvm_threads_daemon_threads{job=\"mod-url\"}",
+          "legendFormat": "MOD-URL Daemon Threads",
+          "refId": "C"
+        },
+        {
+          "expr": "jvm_threads_daemon_threads{job=\"mod-analytics\"}",
+          "legendFormat": "MOD-Analytics Daemon Threads",
+          "refId": "D"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24}
+    },
+    {
+      "id": 9,
+      "title": "JVM Garbage Collection",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "rate(jvm_gc_pause_seconds_count{job=\"mod-url\"}[5m])",
+          "legendFormat": "MOD-URL GC Rate",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(jvm_gc_pause_seconds_count{job=\"mod-analytics\"}[5m])",
+          "legendFormat": "MOD-Analytics GC Rate",
+          "refId": "B"
+        },
+        {
+          "expr": "rate(jvm_gc_pause_seconds_sum{job=\"mod-url\"}[5m])",
+          "legendFormat": "MOD-URL GC Time",
+          "refId": "C"
+        },
+        {
+          "expr": "rate(jvm_gc_pause_seconds_sum{job=\"mod-analytics\"}[5m])",
+          "legendFormat": "MOD-Analytics GC Time",
+          "refId": "D"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24}
+    }
+  ],
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "refresh": "5s",
+  "schemaVersion": 30,
+  "version": 1,
+  "links": []
+}
