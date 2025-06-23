@@ -1,0 +1,109 @@
+- name: Deploy Shortly Application
+  hosts: localhost
+  gather_facts: no
+  vars:
+    project_dir: "{{ lookup('env', 'PROJECT_DIR') }}"
+
+  tasks:
+    - name: Stop existing containers
+      command: docker compose down
+      args:
+        chdir: "{{ project_dir }}"
+      ignore_errors: yes
+
+    - name: Build and start services
+      command: docker compose up -d --build
+      args:
+        chdir: "{{ project_dir }}"
+      register: build_result
+
+    - name: Display build logs
+      debug:
+        msg:
+          - "Build and startup logs:"
+          - "{{ build_result.stdout_lines | default(['No build output']) }}"
+          - "{{ build_result.stderr_lines | default([]) }}"
+
+    - name: Check container status after startup
+      command: docker compose ps
+      args:
+        chdir: "{{ project_dir }}"
+      register: container_status
+
+    - name: Display container status
+      debug:
+        msg:
+          - "Container Status:"
+          - "{{ container_status.stdout_lines }}"
+
+    - name: Wait for initial startup
+      pause:
+        seconds: 5
+
+    # Start health checks individually in parallel
+    - name: Start Frontend health check (async)
+      uri:
+        url: http://localhost:3000/health
+        method: GET
+        status_code: 200
+      register: ui_job
+      async: 60
+      poll: 0
+      ignore_errors: yes
+
+    - name: Start URL Service health check (async)
+      uri:
+        url: http://localhost:8080/actuator/health
+        method: GET
+        status_code: 200
+      register: url_job
+      async: 75
+      poll: 0
+      ignore_errors: yes
+
+    - name: Start Analytics Service health check (async)
+      uri:
+        url: http://localhost:8081/actuator/health
+        method: GET
+        status_code: 200
+      register: analytics_job
+      async: 75
+      poll: 0
+      ignore_errors: yes
+
+    # Wait for all health checks with retries
+    - name: Wait for Frontend health check
+      async_status:
+        jid: "{{ ui_job.ansible_job_id }}"
+      register: ui_result
+      until: ui_result.finished
+      retries: 30
+      delay: 2
+      ignore_errors: yes
+
+    - name: Wait for URL Service health check
+      async_status:
+        jid: "{{ url_job.ansible_job_id }}"
+      register: url_result
+      until: url_result.finished
+      retries: 40
+      delay: 2
+      ignore_errors: yes
+
+    - name: Wait for Analytics Service health check
+      async_status:
+        jid: "{{ analytics_job.ansible_job_id }}"
+      register: analytics_result
+      until: analytics_result.finished
+      retries: 40
+      delay: 2
+      ignore_errors: yes
+
+    - name: Display results
+      debug:
+        msg:
+          - "=== DEPLOYMENT COMPLETED ==="
+          - "MOD-UI (port 3000): {{ 'HEALTHY' if ui_result.finished and ui_result.status == 200 else 'UNHEALTHY' }}"
+          - "MOD-URL (port 8080): {{ 'HEALTHY' if url_result.finished and url_result.status == 200 else 'UNHEALTHY' }}"
+          - "MOD-Analytics (port 8081): {{ 'HEALTHY' if analytics_result.finished and analytics_result.status == 200 else 'UNHEALTHY' }}"
+          - "============================"
