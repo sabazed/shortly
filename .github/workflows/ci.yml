@@ -101,21 +101,19 @@ jobs:
           exit-code: '1'
           severity: 'CRITICAL,HIGH'
 
-      - name: Check if Trivy results exist
-        run: |
-          ls -la *.sarif || echo "No SARIF files found"
-
       - name: Upload Trivy scan results for mod-url
         if: needs.test-mod-url.result == 'success' && hashFiles('trivy-mod-url.sarif') != ''
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-mod-url.sarif'
+          category: 'trivy-mod-url'
 
       - name: Upload Trivy scan results for mod-analytics
         if: needs.test-mod-analytics.result == 'success' && hashFiles('trivy-mod-analytics.sarif') != ''
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-mod-analytics.sarif'
+          category: 'trivy-mod-analytics'
 
   deploy:
     name: Deploy to Registry
