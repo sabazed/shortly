@@ -1,0 +1,31 @@
+- name: Shutdown URL Shortener
+  hosts: localhost
+  gather_facts: no
+  vars:
+    project_dir: "{{ lookup('env', 'PROJECT_DIR') }}"
+
+  tasks:
+    - name: Stop all services
+      command: docker compose down
+      args:
+        chdir: "{{ project_dir }}"
+      register: shutdown_result
+
+    - name: Check container status
+      command: docker compose ps
+      args:
+        chdir: "{{ project_dir }}"
+      register: container_status
+
+    - name: Display shutdown results
+      debug:
+        msg:
+          - "=== SHUTDOWN COMPLETED ==="
+          - "All services stopped"
+          - "Containers removed"
+          - "Data volumes preserved"
+          - "Ports freed: 3000, 8080, 8081, 3001, 9090"
+
+    - name: Show remaining containers
+      debug:
+        var: container_status.stdout_lines
