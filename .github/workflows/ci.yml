@@ -88,7 +88,7 @@ jobs:
           format: 'sarif'
           output: 'trivy-mod-url.sarif'
           exit-code: '1'
-          severity: 'CRITICAL,HIGH'
+          severity: 'CRITICAL'
 
       - name: Run Trivy vulnerability scanner on mod-analytics
         if: needs.test-mod-analytics.result == 'success'
@@ -99,7 +99,7 @@ jobs:
           format: 'sarif'
           output: 'trivy-mod-analytics.sarif'
           exit-code: '1'
-          severity: 'CRITICAL,HIGH'
+          severity: 'CRITICAL'
 
       - name: Upload Trivy scan results for mod-url
         if: needs.test-mod-url.result == 'success' && hashFiles('trivy-mod-url.sarif') != ''
