@@ -10,7 +10,6 @@ jobs:
   test-mod-url:
     name: Test URL Service
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.modified, 'mod-url/') || github.event_name == 'pull_request'
 
     steps:
       - name: Checkout code
@@ -33,7 +32,6 @@ jobs:
   test-mod-analytics:
     name: Test Analytics Service
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.modified, 'mod-analytics/') || github.event_name == 'pull_request'
 
     steps:
       - name: Checkout code
