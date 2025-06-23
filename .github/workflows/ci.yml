@@ -69,7 +69,7 @@ jobs:
         with:
           context: ./mod-url
           load: true
-          tags: ghcr.io/sabazed/shortly/mod-url:latest
+          tags: mod-url:scan
 
       - name: Build mod-analytics image
         if: needs.test-mod-analytics.result == 'success'
@@ -77,14 +77,14 @@ jobs:
         with:
           context: ./mod-analytics
           load: true
-          tags: ghcr.io/sabazed/shortly/mod-analytics:latest
+          tags: mod-analytics:scan
 
       - name: Run Trivy vulnerability scanner on mod-url
         if: needs.test-mod-url.result == 'success'
         uses: aquasecurity/trivy-action@master
         continue-on-error: true
         with:
-          image-ref: ghcr.io/sabazed/shortly/mod-url:latest
+          image-ref: mod-url:scan
           format: 'sarif'
           output: 'trivy-mod-url.sarif'
           exit-code: '1'
@@ -95,7 +95,7 @@ jobs:
         uses: aquasecurity/trivy-action@master
         continue-on-error: true
         with:
-          image-ref: ghcr.io/sabazed/shortly/mod-analytics:latest
+          image-ref: mod-analytics:scan
           format: 'sarif'
           output: 'trivy-mod-analytics.sarif'
           exit-code: '1'
