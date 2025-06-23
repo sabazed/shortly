@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [ main ]
 
+# Add permissions for GITHUB_TOKEN
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
 jobs:
   test-mod-url:
     name: Test URL Service
