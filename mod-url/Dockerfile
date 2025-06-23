@@ -11,20 +11,14 @@ RUN mvn dependency:go-offline -B
 COPY src ./src
 RUN mvn clean package -DskipTests -B
 
-# Runtime stage - using official OpenJDK 21
-FROM openjdk:21-jdk-slim
+# Runtime stage - using distroless
+FROM gcr.io/distroless/java21-debian12:nonroot
 
 WORKDIR /app
-
-# Install curl for health checks
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 # Copy the built JAR from build stage
 COPY --from=build /app/target/*.jar app.jar
 
 EXPOSE 8080
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
-  CMD curl -f http://localhost:8080/actuator/health || exit 1
-
-CMD ["java", "-jar", "app.jar"]
+CMD ["app.jar"]

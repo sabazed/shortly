@@ -10,7 +10,6 @@ jobs:
   test-mod-url:
     name: Test URL Service
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.modified, 'mod-url/') || github.event_name == 'pull_request'
 
     steps:
       - name: Checkout code
@@ -33,7 +32,6 @@ jobs:
   test-mod-analytics:
     name: Test Analytics Service
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.modified, 'mod-analytics/') || github.event_name == 'pull_request'
 
     steps:
       - name: Checkout code
@@ -57,7 +55,72 @@ jobs:
     name: Build Docker Images
     runs-on: ubuntu-latest
     needs: [test-mod-url, test-mod-analytics]
-    if: always() && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build mod-url image
+        if: needs.test-mod-url.result == 'success'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./mod-url
+          load: true
+          tags: mod-url:scan
+
+      - name: Build mod-analytics image
+        if: needs.test-mod-analytics.result == 'success'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./mod-analytics
+          load: true
+          tags: mod-analytics:scan
+
+      - name: Run Trivy vulnerability scanner on mod-url
+        if: needs.test-mod-url.result == 'success'
+        uses: aquasecurity/trivy-action@master
+        continue-on-error: true
+        with:
+          image-ref: mod-url:scan
+          format: 'sarif'
+          output: 'trivy-mod-url.sarif'
+          exit-code: '1'
+          severity: 'CRITICAL'
+
+      - name: Run Trivy vulnerability scanner on mod-analytics
+        if: needs.test-mod-analytics.result == 'success'
+        uses: aquasecurity/trivy-action@master
+        continue-on-error: true
+        with:
+          image-ref: mod-analytics:scan
+          format: 'sarif'
+          output: 'trivy-mod-analytics.sarif'
+          exit-code: '1'
+          severity: 'CRITICAL'
+
+      - name: Upload Trivy scan results for mod-url
+        if: needs.test-mod-url.result == 'success' && hashFiles('trivy-mod-url.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-mod-url.sarif'
+          category: 'trivy-mod-url'
+
+      - name: Upload Trivy scan results for mod-analytics
+        if: needs.test-mod-analytics.result == 'success' && hashFiles('trivy-mod-analytics.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-mod-analytics.sarif'
+          category: 'trivy-mod-analytics'
+
+  deploy:
+    name: Deploy to Registry
+    runs-on: ubuntu-latest
+    needs: [build-docker]
+    if: github.ref == 'refs/heads/main' && needs.build-docker.result == 'success'
+    environment: production
 
     steps:
       - name: Checkout code
@@ -73,46 +136,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push mod-url
-        if: needs.test-mod-url.result == 'success'
+      - name: Push mod-url image
         uses: docker/build-push-action@v5
         with:
           context: ./mod-url
           push: true
           tags: ghcr.io/sabazed/shortly/mod-url:latest
 
-      - name: Build and push mod-analytics
-        if: needs.test-mod-analytics.result == 'success'
+      - name: Push mod-analytics image
         uses: docker/build-push-action@v5
         with:
           context: ./mod-analytics
           push: true
           tags: ghcr.io/sabazed/shortly/mod-analytics:latest
-
-      - name: Run Trivy vulnerability scanner on mod-url
-        if: needs.test-mod-url.result == 'success'
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ghcr.io/sabazed/shortly/mod-url:latest
-          format: 'sarif'
-          output: 'trivy-mod-url.sarif'
-
-      - name: Run Trivy vulnerability scanner on mod-analytics
-        if: needs.test-mod-analytics.result == 'success'
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ghcr.io/sabazed/shortly/mod-analytics:latest
-          format: 'sarif'
-          output: 'trivy-mod-analytics.sarif'
-
-      - name: Upload Trivy scan results for mod-url
-        if: needs.test-mod-url.result == 'success'
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-mod-url.sarif'
-
-      - name: Upload Trivy scan results for mod-analytics
-        if: needs.test-mod-analytics.result == 'success'
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-mod-analytics.sarif'
