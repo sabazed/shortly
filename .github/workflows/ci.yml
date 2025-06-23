@@ -88,3 +88,31 @@ jobs:
           context: ./mod-analytics
           push: true
           tags: ghcr.io/sabazed/shortly/mod-analytics:latest
+
+      - name: Run Trivy vulnerability scanner on mod-url
+        if: needs.test-mod-url.result == 'success'
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/sabazed/shortly/mod-url:latest
+          format: 'sarif'
+          output: 'trivy-mod-url.sarif'
+
+      - name: Run Trivy vulnerability scanner on mod-analytics
+        if: needs.test-mod-analytics.result == 'success'
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/sabazed/shortly/mod-analytics:latest
+          format: 'sarif'
+          output: 'trivy-mod-analytics.sarif'
+
+      - name: Upload Trivy scan results for mod-url
+        if: needs.test-mod-url.result == 'success'
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-mod-url.sarif'
+
+      - name: Upload Trivy scan results for mod-analytics
+        if: needs.test-mod-analytics.result == 'success'
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-mod-analytics.sarif'
