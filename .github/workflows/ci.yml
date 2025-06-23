@@ -58,10 +58,42 @@ jobs:
         working-directory: ./mod-analytics
         run: mvn clean package -DskipTests
 
+  test-mod-ui:
+    name: Test UI Module
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: './mod-ui/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: ./mod-ui
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Run tests
+        working-directory: ./mod-ui
+        run: npm test -- --coverage --watchAll=false
+
+      - name: Build UI
+        working-directory: ./mod-ui
+        run: npm run build
+
   build-docker:
     name: Build Docker Images
     runs-on: ubuntu-latest
-    needs: [test-mod-url, test-mod-analytics]
+    needs: [test-mod-url, test-mod-analytics, test-mod-ui]
 
     steps:
       - name: Checkout code
@@ -86,6 +118,14 @@ jobs:
           load: true
           tags: mod-analytics:scan
 
+      - name: Build mod-ui image
+        if: needs.test-mod-ui.result == 'success'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./mod-ui
+          load: true
+          tags: mod-ui:scan
+
       - name: Run Trivy vulnerability scanner on mod-url
         if: needs.test-mod-url.result == 'success'
         uses: aquasecurity/trivy-action@master
@@ -108,6 +148,17 @@ jobs:
           exit-code: '1'
           severity: 'CRITICAL'
 
+      - name: Run Trivy vulnerability scanner on mod-ui
+        if: needs.test-mod-ui.result == 'success'
+        uses: aquasecurity/trivy-action@master
+        continue-on-error: true
+        with:
+          image-ref: mod-ui:scan
+          format: 'sarif'
+          output: 'trivy-mod-ui.sarif'
+          exit-code: '1'
+          severity: 'CRITICAL'
+
       - name: Upload Trivy scan results for mod-url
         if: needs.test-mod-url.result == 'success' && hashFiles('trivy-mod-url.sarif') != ''
         uses: github/codeql-action/upload-sarif@v3
@@ -121,6 +172,13 @@ jobs:
         with:
           sarif_file: 'trivy-mod-analytics.sarif'
           category: 'trivy-mod-analytics'
+
+      - name: Upload Trivy scan results for mod-ui
+        if: needs.test-mod-ui.result == 'success' && hashFiles('trivy-mod-ui.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-mod-ui.sarif'
+          category: 'trivy-mod-ui'
 
   deploy:
     name: Deploy to Registry
@@ -156,3 +214,10 @@ jobs:
           context: ./mod-analytics
           push: true
           tags: ghcr.io/sabazed/shortly/mod-analytics:latest
+
+      - name: Push mod-ui image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./mod-ui
+          push: true
+          tags: ghcr.io/sabazed/shortly/mod-ui:latest
