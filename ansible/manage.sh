@@ -1,6 +1,15 @@
 #!/bin/bash
 set -e
 
+# Check for .env file and source it if it exists
+if [ -f "../.env" ]; then
+    echo "Loading environment variables from .env file..."
+    set -a  # Automatically export all variables
+    source ../.env
+    set +a  # Turn off automatic export
+else
+    echo "No .env file found - using default/system environment variables"
+fi
 # Default values
 PROJECT_DIR="${PROJECT_DIR:-$(pwd)/..}"
 
@@ -40,12 +49,12 @@ case "$1" in
         show_info
         cd "$PROJECT_DIR" && docker compose ps
         echo ""
-        echo "  Expected URLs (if running):"
-        echo "  MOD-UI: http://localhost:3000"
-        echo "  MOD-URL: http://localhost:8080"
-        echo "  MOD-Analytics: http://localhost:8081"
-        echo "  Grafana: http://localhost:3001"
-        echo "  Prometheus: http://localhost:9090"
+        echo "Expected URLs (if running):"
+        echo " - MOD-UI: http://localhost:3000"
+        echo " - MOD-URL: http://localhost:8080"
+        echo " - MOD-Analytics: http://localhost:8081"
+        echo " - Grafana: http://localhost:3001"
+        echo " - Prometheus: http://localhost:9090"
         ;;
     *)
         echo "Usage: $0 {start|stop|restart|status}"
